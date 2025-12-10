@@ -56,13 +56,17 @@ public with sharing class MetadataTriggerService {
      * record in the trigger New / Old list
      */
     public static String getSObjectType() {
-        if (Trigger.new != null) {
-            return Trigger.new[0].getSObjectType().getDescribe().getName();
-        } else if (Trigger.old != null) {
-            return Trigger.old[0].getSObjectType().getDescribe().getName();
+        // Get the SObjectType directly from the trigger context
+        if (Trigger.isInsert || Trigger.isUpdate || Trigger.isDelete || Trigger.isUndelete) {
+            return Trigger.isDelete ? 
+                Trigger.old.getSObjectType().getDescribe().getName() : 
+                Trigger.new.getSObjectType().getDescribe().getName();
         }
+        
         throw new MetadataTriggerServiceException(
-            'Trigger.new && Trigger.old are both null. Are you excercising this method outside of a trigger context?'
+            'Could not determine SObject type. Are you exercising this method outside of a trigger context?'
         );
+    }
+
     }
 }
