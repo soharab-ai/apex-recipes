@@ -225,19 +225,17 @@ public class TestFactory {
      * @param doInsert  Boolean, should this code insert the user?
      */
     public static User createTestUser(Id profileId, boolean doInsert) {
+        TestDataConfiguration config = TestDataConfiguration.getInstance();
+        String uniqueSuffix = String.valueOf(Crypto.getRandomInteger());
         User u = new User(
             profileId = profileId,
-            LastName = 'last',
-            Email = 'Testuser@test.example.com',
-            Username = 'Testuser@test.example.com' + Crypto.getRandomInteger(),
-            CompanyName = 'TEST',
-            Title = 'title',
-            Alias = 'alias',
-            TimeZoneSidKey = 'America/Los_Angeles',
-            EmailEncodingKey = 'UTF-8',
-            LanguageLocaleKey = 'en_US',
-            LocaleSidKey = 'en_US'
+            LastName = config.defaultLastName,
+            Email = 'Testuser@' + config.defaultDomain,
+            Username = 'Testuser' + uniqueSuffix + '@' + config.defaultDomain,
+            CompanyName = config.defaultCompany,
+            Password = CustomCredentialManager.getTestPassword()
         );
+
         if (doInsert) {
             insert u;
         }
