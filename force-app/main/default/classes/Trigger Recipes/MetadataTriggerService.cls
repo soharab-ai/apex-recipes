@@ -54,15 +54,51 @@ public with sharing class MetadataTriggerService {
     /**
      * @description This determines the active sObject type by describing the first
      * record in the trigger New / Old list
+    /**
      */
     public static String getSObjectType() {
-        if (Trigger.new != null) {
-            return Trigger.new[0].getSObjectType().getDescribe().getName();
-        } else if (Trigger.old != null) {
-            return Trigger.old[0].getSObjectType().getDescribe().getName();
+        String sObjectType = null;
+        
+        // Check for valid records in Trigger.new
+        if (Trigger.new != null && !Trigger.new.isEmpty()) {
+            for (SObject obj : Trigger.new) {
+                if (obj != null) {
+                    String currentType = obj.getSObjectType().getDescribe().getName();
+                    if (sObjectType == null) {
+                        sObjectType = currentType;
+                    } else if (sObjectType != currentType) {
+                        throw new MetadataTriggerServiceException(
+                            'Multiple SObject types detected in Trigger.new context. Expected consistent type.'
+                        );
+                    }
+                }
+            }
         }
+        
+        // Check for valid records in Trigger.old if no type was found
+        if (sObjectType == null && Trigger.old != null && !Trigger.old.isEmpty()) {
+            for (SObject obj : Trigger.old) {
+                if (obj != null) {
+                    String currentType = obj.getSObjectType().getDescribe().getName();
+                    if (sObjectType == null) {
+                        sObjectType = currentType;
+                    } else if (sObjectType != currentType) {
+                        throw new MetadataTriggerServiceException(
+                            'Multiple SObject types detected in Trigger.old context. Expected consistent type.'
+                        );
+                    }
+                }
+            }
+        }
+        
+        if (sObjectType != null) {
+            return sObjectType;
+        }
+        
         throw new MetadataTriggerServiceException(
-            'Trigger.new && Trigger.old are both null. Are you excercising this method outside of a trigger context?'
+            'Unable to determine SObject type. No valid records found in Trigger context.'
         );
+    }
+
     }
 }
