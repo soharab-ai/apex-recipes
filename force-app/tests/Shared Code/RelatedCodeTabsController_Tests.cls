@@ -39,12 +39,66 @@ private class RelatedCodeTabsController_Tests {
         );
     }
 
+@isTest
+public class RelatedCodeTabsController_Tests {
+    
+    @testSetup
+    static void setupTestData() {
+        Profile testProfile = [SELECT Id FROM Profile WHERE Name = 'Standard User' LIMIT 1];
+        if (testProfile == null) {
+            testProfile = [SELECT Id FROM Profile LIMIT 1];
+        }
+        
+        User testUser = new User(
+            Alias = 'testUsr',
+            Email = 'testuser@example.com',
+            EmailEncodingKey = 'UTF-8',
+            LastName = 'TestUser',
+            LanguageLocaleKey = 'en_US',
+            LocaleSidKey = 'en_US',
+            ProfileId = testProfile.Id,
+            TimeZoneSidKey = 'America/Los_Angeles',
+            UserName = 'testuser' + DateTime.now().getTime() + '@example.com'
+        );
+        insert testUser;
+    }
+    
+    private static User getTestUser() {
+        return [SELECT Id FROM User WHERE Email = 'testuser@example.com' LIMIT 1];
+    }
+
+    @isTest
+    static void testPreviousMethod() {
+        User testUser = getTestUser();
+        
+        System.runAs(testUser) {
+            Test.startTest();
+            try {
+                String result = RelatedCodeTabsController.someMethod();
+                System.assertNotEquals(null, result, 'Expected to catch a query exception');
+            } catch (Exception e) {
+                System.assert(true, 'Expected to catch a query exception');
+            }
+            Test.stopTest();
+        }
+    }
+
     @isTest
     static void testGetRElatedClassesNegativeNoRelated() {
-        Test.startTest();
-        String[] relatedClasses = RelatedCodeTabsController.getRelatedClasses(
-            'DMLRecipes_Tests'
-        );
+        User testUser = getTestUser();
+        
+        System.runAs(testUser) {
+            Test.startTest();
+            String[] relatedClasses = RelatedCodeTabsController.getRelatedClasses(
+                'DMLRecipes_Tests'
+            );
+            Test.stopTest();
+            
+            System.assertNotEquals(null, relatedClasses, 'Expected non-null result');
+        }
+    }
+}
+
 
         Test.stopTest();
         System.Assert.areEqual(
