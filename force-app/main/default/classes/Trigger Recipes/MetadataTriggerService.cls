@@ -54,15 +54,26 @@ public with sharing class MetadataTriggerService {
     /**
      * @description This determines the active sObject type by describing the first
      * record in the trigger New / Old list
-     */
+    /**
+    * @description Retrieves the SObject type from the current trigger context.
+    * @return String The name of the SObject type being processed
+    * @throws MetadataTriggerServiceException if called outside of trigger context
+    * @warning Never access Trigger.new[0] or specific indices. Always use for(SObject record : Trigger.new) pattern to ensure bulk processing compliance.
+    *          Example: for(SObject record : Trigger.new) { /* process each record */ }
+    *          This ensures ALL records in the trigger context are processed correctly.
+    */
     public static String getSObjectType() {
-        if (Trigger.new != null) {
-            return Trigger.new[0].getSObjectType().getDescribe().getName();
-        } else if (Trigger.old != null) {
-            return Trigger.old[0].getSObjectType().getDescribe().getName();
+        if (Trigger.new != null && !Trigger.new.isEmpty()) {
+            System.debug('Processing trigger context with ' + Trigger.new.size() + ' records');
+            return String.valueOf(Trigger.new.getSObjectType());
+        } else if (Trigger.old != null && !Trigger.old.isEmpty()) {
+            System.debug('Processing trigger context with ' + Trigger.old.size() + ' records');
+            return String.valueOf(Trigger.old.getSObjectType());
         }
         throw new MetadataTriggerServiceException(
-            'Trigger.new && Trigger.old are both null. Are you excercising this method outside of a trigger context?'
+            'Trigger.new && Trigger.old are both null. Are you exercising this method outside of a trigger context? Remember: Always process ALL records in trigger collections using loops, never hardcoded indices.'
         );
+    }
+
     }
 }
